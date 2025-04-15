@@ -1,0 +1,6 @@
+C:/Users/ZhuanZ1/Downloads/temp/build/Release/CMakeFiles/CtrBoard-H7_DBUS.dir
+C:/Users/ZhuanZ1/Downloads/temp/build/Release/CMakeFiles/edit_cache.dir
+C:/Users/ZhuanZ1/Downloads/temp/build/Release/CMakeFiles/rebuild_cache.dir
+C:/Users/ZhuanZ1/Downloads/temp/build/Release/cmake/stm32cubemx/CMakeFiles/STM32_Drivers.dir
+C:/Users/ZhuanZ1/Downloads/temp/build/Release/cmake/stm32cubemx/CMakeFiles/edit_cache.dir
+C:/Users/ZhuanZ1/Downloads/temp/build/Release/cmake/stm32cubemx/CMakeFiles/rebuild_cache.dir

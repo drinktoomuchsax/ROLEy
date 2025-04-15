@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/ZhuanZ1/Downloads/temp/build/Release/cmake_install.cmake",
+		"C:/Users/ZhuanZ1/Downloads/temp/build/Release/cmake/stm32cubemx/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
