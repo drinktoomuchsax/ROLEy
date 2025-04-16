@@ -16,10 +16,10 @@ build/*
 build
 
 # VSCode
-.vscode
+# .vscode
 
 # cursor
-.cursorrules
+# .cursorrules
 
 # example files
 ROLEy.ioc
