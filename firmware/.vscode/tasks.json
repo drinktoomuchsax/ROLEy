@@ -81,19 +81,12 @@
             }
         },
         {
-            "label": "提示音",
-            "type": "shell",
-            "command": "powershell",
-            "args": [
-                "-Command",
-                "[console]::beep(800,500); [console]::beep(1000,500)"
+            "label": "编译烧录 Debug",
+            "dependsOn": [
+                "编译 Debug", 
+                "烧录 Debug"
             ],
-            "problemMatcher": []
-        },
-        {
-            "label": "烧录并提示 Debug",
             "dependsOrder": "sequence",
-            "dependsOn": ["烧录 Debug", "提示音"],
             "group": {
                 "kind": "test",
                 "isDefault": true
@@ -101,9 +94,12 @@
             "problemMatcher": []
         },
         {
-            "label": "烧录并提示 Release",
+            "label": "编译烧录 Release",
+            "dependsOn": [
+                "编译 Release", 
+                "烧录 Release"
+            ],
             "dependsOrder": "sequence",
-            "dependsOn": ["烧录 Release", "提示音"],
             "group": "test",
             "problemMatcher": []
         },
