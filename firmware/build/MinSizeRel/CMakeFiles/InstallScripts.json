@@ -1,8 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"C:/Users/ZhuanZ1/Downloads/temp/build/MinSizeRel/cmake_install.cmake",
-		"C:/Users/ZhuanZ1/Downloads/temp/build/MinSizeRel/cmake/stm32cubemx/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
