@@ -21,6 +21,7 @@
 #include "dma.h"
 #include "usart.h"
 #include "gpio.h"
+#include "sbus.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -92,6 +93,11 @@ int main(void)
   MX_UART5_Init();
   /* USER CODE BEGIN 2 */
 
+  // 初始化SBUS接收
+  SBUS_Init();
+  // 启动SBUS接收
+  SBUS_StartReceive();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -101,6 +107,21 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    // 检查SBUS是否有新数据
+    if (SBUS_IsNewDataAvailable())
+    {
+      // 获取SBUS数据
+      SBUS_Data_t *sbus_data = SBUS_GetData();
+      
+      // 在这里处理SBUS数据
+      // 示例: 可以使用sbus_data->channels[0]到sbus_data->channels[15]获取通道值
+      
+      // 检查是否有失效保护
+      if (sbus_data->failsafe_activated)
+      {
+        // 失效保护处理...
+      }
+    }
   }
   /* USER CODE END 3 */
 }
