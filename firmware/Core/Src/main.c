@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2025 STMicroelectronics.
+  * Copyright (c) 2024 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -24,7 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "uart_bsp.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,7 +51,7 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+uint32_t ssy;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -91,13 +91,16 @@ int main(void)
   MX_USART1_UART_Init();
   MX_UART5_Init();
   /* USER CODE BEGIN 2 */
-
+//	HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_buff, BUFF_SIZE*2);
+	HAL_UARTEx_ReceiveToIdle_DMA(&huart5, rx_buff, BUFF_SIZE*2);
+//	HAL_UARTEx_ReceiveToIdle_DMA(&huart8, rx_buff, BUFF_SIZE*2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		ssy++;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
