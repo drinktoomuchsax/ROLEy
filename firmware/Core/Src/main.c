@@ -21,6 +21,9 @@
 #include "dma.h"
 #include "usart.h"
 #include "gpio.h"
+#include "sbus.h"
+#include <string.h>
+#include <stdio.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -45,7 +48,41 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+// 遥控器通道定义
+#define RC_CH_ROLL      0  // 横滚(左右)通道
+#define RC_CH_PITCH     1  // 俯仰(前后)通道
+#define RC_CH_THROTTLE  2  // 油门通道
+#define RC_CH_YAW       3  // 偏航通道
+#define RC_CH_SWITCH1   4  // 拨杆1
+#define RC_CH_SWITCH2   5  // 拨杆2
+#define RC_CH_SWITCH3   6  // 拨杆3
 
+// 遥控器值范围
+#define RC_MIN_VALUE    172    // SBUS最小值
+#define RC_MAX_VALUE    1811   // SBUS最大值
+#define RC_RANGE        (RC_MAX_VALUE - RC_MIN_VALUE)
+
+// 遥控器数据结构
+typedef struct {
+  float roll;          // 横滚，范围[-1, 1]
+  float pitch;         // 俯仰，范围[-1, 1]
+  float throttle;      // 油门，范围[0, 1]
+  float yaw;           // 偏航，范围[-1, 1]
+  int switch1;         // 拨杆1，位置[0, 1, 2]
+  int switch2;         // 拨杆2，位置[0, 1, 2]
+  int switch3;         // 拨杆3，位置[0, 1, 2]
+  uint8_t connected;   // 连接状态
+} RC_Data_t;
+
+RC_Data_t rc_data = {0};  // 遥控器数据
+
+// 遥控器数据处理函数
+void RC_ProcessData(SBUS_Data_t *sbus_data);
+
+// 调试辅助变量
+uint32_t last_print_time = 0;
+#define DEBUG_PRINT_INTERVAL 500  // 打印间隔，单位ms
+char debug_buffer[128];           // 调试信息缓冲区
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -115,6 +152,65 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    // 检查SBUS是否有新数据
+    if (SBUS_IsNewDataAvailable())
+    {
+      // 获取SBUS数据
+      SBUS_Data_t *sbus_data = SBUS_GetData();
+      
+      // 处理SBUS数据，转换为标准化的控制值
+      RC_ProcessData(sbus_data);
+      
+      // 在这里可以使用rc_data中的数据进行控制
+      // 例如: 使用rc_data.roll, rc_data.pitch, rc_data.throttle, rc_data.yaw进行飞行控制
+      // 或根据拨杆位置切换模式:
+      
+      // 示例: 根据拨杆1位置切换不同模式
+      switch (rc_data.switch1) {
+        case 0:
+          // 拨杆位置0模式处理
+          // 例如: 手动模式
+          break;
+        case 1:
+          // 拨杆位置1模式处理
+          // 例如: 姿态模式
+          break;
+        case 2:
+          // 拨杆位置2模式处理
+          // 例如: 自动模式
+          break;
+      }
+      
+      // 检查遥控器连接状态
+      if (!rc_data.connected) {
+        // 遥控器未连接或失效保护激活
+        // 执行安全降落或停机操作
+      }
+    }
+
+    // 定期通过串口输出遥控器数据进行调试
+    uint32_t current_time = HAL_GetTick();
+    if (current_time - last_print_time >= DEBUG_PRINT_INTERVAL)
+    {
+      last_print_time = current_time;
+      
+      // 格式化标准化后的遥控器信息
+      sprintf(debug_buffer, "RC: R=%.2f P=%.2f T=%.2f Y=%.2f S1=%d S2=%d S3=%d CON=996123\r\n",
+              rc_data.roll, rc_data.pitch, rc_data.throttle, rc_data.yaw,
+              rc_data.switch1, rc_data.switch2, rc_data.switch3);
+      Debug_Print(debug_buffer);
+      
+      // 如果需要，还可以输出原始SBUS值
+      if (SBUS_IsNewDataAvailable())
+      {
+        SBUS_Data_t *sbus_data = SBUS_GetData();
+        sprintf(debug_buffer, "RAW: CH1=%d CH2=%d CH3=%d CH4=%d CH5=%d FL=%d FS=996\r\n",
+                sbus_data->channels[0], sbus_data->channels[1], 
+                sbus_data->channels[2], sbus_data->channels[3],
+                sbus_data->channels[4], sbus_data->frame_lost);
+        Debug_Print(debug_buffer);
+      }
+    }
   }
   /* USER CODE END 3 */
 }
