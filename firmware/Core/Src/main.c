@@ -56,6 +56,16 @@ uint32_t ssy;
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+// /**
+//   * @brief  重定向printf函数到UART1
+//   * @param  ch: 要发送的字符
+//   * @retval 发送的字符
+//   */
+// int __io_putchar(int ch)
+// {
+//   HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+//   return ch;
+// }
 
 /* USER CODE END 0 */
 
@@ -100,6 +110,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    // printf("rx_buff: %s\n", rx_buff);
 		ssy++;
     /* USER CODE END WHILE */
 

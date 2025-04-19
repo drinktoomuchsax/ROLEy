@@ -4,8 +4,7 @@ enable_language(C ASM)
 # STM32CubeMX generated symbols (macros)
 set(MX_Defines_Syms 
 	USE_HAL_DRIVER 
-	STM32H723xx 
-	STM32_THREAD_SAFE_STRATEGY=2
+	STM32H723xx
     $<$<CONFIG:Debug>:DEBUG>
 )
 

@@ -1,7 +1,6 @@
 #include "uart_bsp.h"
 #include "string.h"
 #include "usart.h"
-#include <stdio.h>
 
 #define SBUS_HEAD 0X0F
 #define SBUS_END 0X00
@@ -29,17 +28,6 @@ void sbus_frame_parse(remoter_t *remoter, uint8_t *buf)
     remoter->rc.ch[7] = ((buf[10] >> 5 | buf[11] << 3) & 0x07FF);
     remoter->rc.ch[8] = ((buf[12] | buf[13] << 8) & 0x07FF);
     remoter->rc.ch[9] = ((buf[13] >> 3 | buf[14] << 5) & 0x07FF);
-
-	printf("remoter->rc.ch[0]: %d\n", remoter->rc.ch[0]);
-	printf("remoter->rc.ch[1]: %d\n", remoter->rc.ch[1]);
-	printf("remoter->rc.ch[2]: %d\n", remoter->rc.ch[2]);
-	printf("remoter->rc.ch[3]: %d\n", remoter->rc.ch[3]);
-	printf("remoter->rc.ch[4]: %d\n", remoter->rc.ch[4]);
-	printf("remoter->rc.ch[5]: %d\n", remoter->rc.ch[5]);
-	printf("remoter->rc.ch[6]: %d\n", remoter->rc.ch[6]);
-	printf("remoter->rc.ch[7]: %d\n", remoter->rc.ch[7]);
-	printf("remoter->rc.ch[8]: %d\n", remoter->rc.ch[8]);
-	printf("remoter->rc.ch[9]: %d\n", remoter->rc.ch[9]);
 }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef * huart, uint16_t Size)
@@ -49,13 +37,13 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef * huart, uint16_t Size)
 	{
 		if (Size <= BUFF_SIZE)
 		{
-			HAL_UARTEx_ReceiveToIdle_DMA(&huart5, rx_buff, BUFF_SIZE*2); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïºï¿½ï¿½ï¿½ï¿½ï¿½
+			HAL_UARTEx_ReceiveToIdle_DMA(&huart5, rx_buff, BUFF_SIZE*2); // ½ÓÊÕÍê±ÏºóÖØÆô
 			sbus_frame_parse(&remoter, rx_buff);
 //			memset(rx_buff, 0, BUFF_SIZE);
 		}
-		else  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý³ï¿½ï¿½È´ï¿½ï¿½ï¿½BUFF_SIZEï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		else  // ½ÓÊÕÊý¾Ý³¤¶È´óÓÚBUFF_SIZE£¬´íÎó´¦Àí
 		{	
-			HAL_UARTEx_ReceiveToIdle_DMA(&huart5, rx_buff, BUFF_SIZE*2); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïºï¿½ï¿½ï¿½ï¿½ï¿½
+			HAL_UARTEx_ReceiveToIdle_DMA(&huart5, rx_buff, BUFF_SIZE*2); // ½ÓÊÕÍê±ÏºóÖØÆô
 			memset(rx_buff, 0, BUFF_SIZE);							   
 		}
 	}
@@ -65,7 +53,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef * huart)
 {
 	if(huart->Instance == UART5)
 	{
-		HAL_UARTEx_ReceiveToIdle_DMA(&huart5, rx_buff, BUFF_SIZE*2); // ï¿½ï¿½ï¿½Õ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
-		memset(rx_buff, 0, BUFF_SIZE);							   // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ»ï¿½ï¿½ï¿½		
+		HAL_UARTEx_ReceiveToIdle_DMA(&huart5, rx_buff, BUFF_SIZE*2); // ½ÓÊÕ·¢Éú´íÎóºóÖØÆô
+		memset(rx_buff, 0, BUFF_SIZE);							   // Çå³ý½ÓÊÕ»º´æ		
 	}
 }
