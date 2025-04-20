@@ -25,11 +25,24 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "uart_bsp.h"
+#include <stdbool.h>
+#include <stdlib.h>  // 为abs函数添加头文件
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+// 定义电机控制结构体，作为示例
+typedef struct {
+    float left_motor_speed;
+    float right_motor_speed;
+    bool lights_on;
+    bool grabber_active;
+} robot_control_t;
 
+// 声明实际电机控制函数（这里只是示意）
+void set_motor_speeds(float left, float right);
+void set_lights(bool on);
+void set_grabber(bool active);
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -45,17 +58,18 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint32_t last_update_time = 0;  // 上次更新时间
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-uint32_t ssy;
+uint32_t dtms;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+remoter_t *tx_12 = NULL;
 
 /* USER CODE END 0 */
 
@@ -91,16 +105,31 @@ int main(void)
   MX_USART1_UART_Init();
   MX_UART5_Init();
   /* USER CODE BEGIN 2 */
-//	HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_buff, BUFF_SIZE*2);
-	HAL_UARTEx_ReceiveToIdle_DMA(&huart5, rx_buff, BUFF_SIZE*2);
-//	HAL_UARTEx_ReceiveToIdle_DMA(&huart8, rx_buff, BUFF_SIZE*2);
+  // 初始化UART BSP模块（替代直接调用HAL_UARTEx_ReceiveToIdle_DMA）
+  UART_BSP_Init();
+  
+  // 初始化机器人控制结构体
+  tx_12 = UART_BSP_GetRemoterData();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		ssy++;
+    
+    // 每10ms更新一次机器人控制
+    if (HAL_GetTick() - last_update_time >= 10)
+    {
+      last_update_time = HAL_GetTick();
+      
+      // 从遥控器更新机器人控制数
+      
+      
+      // 应用控制命令
+    }
+
+    
+    dtms++;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -168,7 +197,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
 /* USER CODE END 4 */
 
 /**
