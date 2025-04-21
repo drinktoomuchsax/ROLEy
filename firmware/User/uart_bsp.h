@@ -78,7 +78,7 @@ typedef struct
     struct
     {
         /* 按键数值 */
-        key_state_t left_shuolder; // 左肩键
+        key_state_t left_shoulder; // 左肩键
         key_state_t left_face; // 左脸键
         key_state_t right_face; // 右脸键
         key_state_t right_shoulder; // 右肩键

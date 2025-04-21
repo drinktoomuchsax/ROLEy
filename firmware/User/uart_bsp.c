@@ -106,7 +106,7 @@ void UART_BSP_ParseSbusFrame(uint8_t *buf)
 	remoter.joy_magnitude.left_magnitude = UART_BSP_GetStickMagnitude(LEFT_STICK); // 左摇杆向量长度, 0~100%
 	remoter.joy_magnitude.right_magnitude = UART_BSP_GetStickMagnitude(RIGHT_STICK); // 右摇杆向量长度, 0~100%
 
-	remoter.key.left_shuolder = (key_state_t)remoter.rc.ch[4]; // 左肩键ch4
+	remoter.key.left_shoulder = (key_state_t)remoter.rc.ch[4]; // 左肩键ch4
 	remoter.key.left_face = (key_state_t)remoter.rc.ch[5]; // 左脸键ch5
 	remoter.key.right_face = (key_state_t)remoter.rc.ch[6]; // 右脸键ch6
 	remoter.key.right_shoulder = (key_state_t)remoter.rc.ch[7]; // 右肩键ch7

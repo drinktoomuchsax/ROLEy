@@ -5,7 +5,7 @@
 // PWM定时器的分辨率（TIM4的Period值）
 #define PWM_MAX_VALUE 2525
 // PWM变化的最大步长（每次调用的最大变化量）
-#define PWM_MAX_STEP 5
+#define PWM_MAX_STEP 100
 
 // 记录当前PWM值
 static uint32_t current_pwm_value[3] = {0, 0, 0}; // 索引0不使用，1和2对应两个通道
@@ -136,6 +136,8 @@ void WheelTec_Stop(motor_channel_t channel)
 // 停止所有电机
 void WheelTec_StopAll(void)
 {
-    WheelTec_Stop(MOTOR_CHANNEL_1);
-    WheelTec_Stop(MOTOR_CHANNEL_2);
+    HAL_GPIO_WritePin(MOTOR_IN_A1_GPIO_Port, MOTOR_IN_A1_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(MOTOR_IN_B1_GPIO_Port, MOTOR_IN_B1_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(MOTOR_IN_A2_GPIO_Port, MOTOR_IN_A2_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(MOTOR_IN_B2_GPIO_Port, MOTOR_IN_B2_Pin, GPIO_PIN_RESET);
 }

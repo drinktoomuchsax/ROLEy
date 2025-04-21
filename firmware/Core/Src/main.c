@@ -74,6 +74,7 @@ uint32_t dtms;
 remoter_t *tx_12 = NULL;
 
 uint8_t temp_debug = 0;
+  uint32_t count = 0;
 
 /* USER CODE END 0 */
 
@@ -122,7 +123,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    
+    dtms ++;
+
     // 每10ms更新一次机器人控制
     if (HAL_GetTick() - last_update_time >= 10)
     {
@@ -132,15 +134,15 @@ int main(void)
       
       // 应用控制命令
 
-        if (tx_12->online) {
+        if (tx_12->online&&tx_12->key.left_shoulder == KEY_DOWN && tx_12->key.right_shoulder == KEY_UP) {
           // 左摇杆控制左电机
           temp_debug = 1;
-          if (tx_12->joy_percent.left_hori > 10) {
+          if (tx_12->joy_percent.left_vert > 10) {
               // 前进
-              WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, abs(tx_12->joy_percent.left_hori));
-          } else if (tx_12->joy_percent.left_hori < -10) {
+              WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, abs(tx_12->joy_percent.left_vert));
+          } else if (tx_12->joy_percent.left_vert < -10) {
               // 后退
-              WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CCW, abs(tx_12->joy_percent.left_hori));
+              WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CCW, abs(tx_12->joy_percent.left_vert));
           } else {
               // 停止
               WheelTec_Stop(MOTOR_CHANNEL_1);
