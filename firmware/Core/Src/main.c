@@ -133,7 +133,7 @@ int main(void)
       
       // 应用控制命令
 
-      if (tx_12->online&&tx_12->key.left_shoulder == KEY_MID && tx_12->key.right_shoulder == KEY_MID) {
+      if (tx_12->online&&tx_12->key.left_shoulder == KEY_DOWN && tx_12->key.right_shoulder == KEY_DOWN) {
         if (tx_12->key.left_face == KEY_DOWN && tx_12->key.right_face == KEY_UP) {
             // 左摇杆控制左电机
             temp_debug = 1;
@@ -164,8 +164,8 @@ int main(void)
           uint8_t throttle = tx_12->throttle;
           int8_t steering = tx_12->joy_percent.right_hori;
           // 计算左右轮的转速
-          int16_t left_speed = throttle + steering;
-          int16_t right_speed = throttle - steering;
+          int16_t left_speed = throttle*(1 + steering/100);
+          int16_t right_speed = throttle*(1 - steering/100);
           // 限制转速在0到100之间
           if (left_speed < 0) left_speed = 0;
           if (left_speed > 100) left_speed = 100;
@@ -174,6 +174,9 @@ int main(void)
           WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, left_speed);
           WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CW, right_speed);
           
+        }else{
+          // 停止所有电机
+          WheelTec_StopAll();
         }
       } else {
           // 遥控器离线，停止所有电机
