@@ -28,6 +28,7 @@
 #include "uart_bsp.h"
 #include <stdbool.h>
 #include <stdlib.h>  // 为abs函数添加头文件
+#include "wheeltec_driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -72,6 +73,8 @@ uint32_t dtms;
 /* USER CODE BEGIN 0 */
 remoter_t *tx_12 = NULL;
 
+uint8_t temp_debug = 0;
+
 /* USER CODE END 0 */
 
 /**
@@ -85,7 +88,7 @@ int main(void)
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
-
+ 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
@@ -109,6 +112,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   // 初始化UART BSP模块（替代直接调用HAL_UARTEx_ReceiveToIdle_DMA）
   UART_BSP_Init();
+  WheelTec_Init();
   
   // 初始化机器人控制结构体
   tx_12 = UART_BSP_GetRemoterData();
@@ -126,12 +130,41 @@ int main(void)
       
       // 从遥控器更新机器人控制数
       
-      
       // 应用控制命令
+
+        if (tx_12->online) {
+          // 左摇杆控制左电机
+          temp_debug = 1;
+          if (tx_12->joy_percent.left_hori > 10) {
+              // 前进
+              WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, abs(tx_12->joy_percent.left_hori));
+          } else if (tx_12->joy_percent.left_hori < -10) {
+              // 后退
+              WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CCW, abs(tx_12->joy_percent.left_hori));
+          } else {
+              // 停止
+              WheelTec_Stop(MOTOR_CHANNEL_1);
+          }
+          
+          // 右摇杆控制右电机
+          if (tx_12->joy_percent.right_vert > 10) {
+              // 前进
+              WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CW, abs(tx_12->joy_percent.right_vert));
+          } else if (tx_12->joy_percent.right_vert < -10) {
+              // 后退
+              WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CCW, abs(tx_12->joy_percent.right_vert));
+          } else {
+              // 停止
+              WheelTec_Stop(MOTOR_CHANNEL_2);
+          }
+      } else {
+          // 遥控器离线，停止所有电机
+          temp_debug = 0;
+          WheelTec_StopAll();
+      }
     }
 
     
-    dtms++;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
