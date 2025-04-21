@@ -7,10 +7,9 @@
 
 // 电机方向枚举
 typedef enum {
-    MOTOR_DIRECTION_STOP = 0,  // 停止
+    MOTOR_DIRECTION_BRAKE = 0,  // 刹车
     MOTOR_DIRECTION_CW,        // 顺时针
     MOTOR_DIRECTION_CCW,       // 逆时针
-    MOTOR_DIRECTION_BRAKE      // 刹车
 } motor_direction_t;
 
 // 电机通道枚举

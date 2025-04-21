@@ -81,7 +81,7 @@ void WheelTec_SetDirection(motor_channel_t channel, motor_direction_t direction)
 {
     if(channel == MOTOR_CHANNEL_1) {
         switch(direction) {
-            case MOTOR_DIRECTION_STOP:
+            case MOTOR_DIRECTION_BRAKE:
                 HAL_GPIO_WritePin(MOTOR_IN_A1_GPIO_Port, MOTOR_IN_A1_Pin, GPIO_PIN_RESET);
                 HAL_GPIO_WritePin(MOTOR_IN_B1_GPIO_Port, MOTOR_IN_B1_Pin, GPIO_PIN_RESET);
                 break;
@@ -91,30 +91,22 @@ void WheelTec_SetDirection(motor_channel_t channel, motor_direction_t direction)
                 break;
             case MOTOR_DIRECTION_CCW:
                 HAL_GPIO_WritePin(MOTOR_IN_A1_GPIO_Port, MOTOR_IN_A1_Pin, GPIO_PIN_RESET);
-                HAL_GPIO_WritePin(MOTOR_IN_B1_GPIO_Port, MOTOR_IN_B1_Pin, GPIO_PIN_SET);
-                break;
-            case MOTOR_DIRECTION_BRAKE:
-                HAL_GPIO_WritePin(MOTOR_IN_A1_GPIO_Port, MOTOR_IN_A1_Pin, GPIO_PIN_SET);
                 HAL_GPIO_WritePin(MOTOR_IN_B1_GPIO_Port, MOTOR_IN_B1_Pin, GPIO_PIN_SET);
                 break;
         }
     } else if(channel == MOTOR_CHANNEL_2) {
         switch(direction) {
-            case MOTOR_DIRECTION_STOP:
+            case MOTOR_DIRECTION_BRAKE:
                 HAL_GPIO_WritePin(MOTOR_IN_A2_GPIO_Port, MOTOR_IN_A2_Pin, GPIO_PIN_RESET);
-                HAL_GPIO_WritePin(MOTER_IN_B2_GPIO_Port, MOTER_IN_B2_Pin, GPIO_PIN_RESET);
+                HAL_GPIO_WritePin(MOTOR_IN_B2_GPIO_Port, MOTOR_IN_B2_Pin, GPIO_PIN_RESET);
                 break;
             case MOTOR_DIRECTION_CW:
                 HAL_GPIO_WritePin(MOTOR_IN_A2_GPIO_Port, MOTOR_IN_A2_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(MOTER_IN_B2_GPIO_Port, MOTER_IN_B2_Pin, GPIO_PIN_RESET);
+                HAL_GPIO_WritePin(MOTOR_IN_B2_GPIO_Port, MOTOR_IN_B2_Pin, GPIO_PIN_RESET);
                 break;
             case MOTOR_DIRECTION_CCW:
                 HAL_GPIO_WritePin(MOTOR_IN_A2_GPIO_Port, MOTOR_IN_A2_Pin, GPIO_PIN_RESET);
-                HAL_GPIO_WritePin(MOTER_IN_B2_GPIO_Port, MOTER_IN_B2_Pin, GPIO_PIN_SET);
-                break;
-            case MOTOR_DIRECTION_BRAKE:
-                HAL_GPIO_WritePin(MOTOR_IN_A2_GPIO_Port, MOTOR_IN_A2_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(MOTER_IN_B2_GPIO_Port, MOTER_IN_B2_Pin, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(MOTOR_IN_B2_GPIO_Port, MOTOR_IN_B2_Pin, GPIO_PIN_SET);
                 break;
         }
     }
@@ -127,7 +119,7 @@ void WheelTec_Control(motor_channel_t channel, motor_direction_t direction, uint
     WheelTec_SetDirection(channel, direction);
     
     // 如果是停止或刹车模式，速度设为0
-    if(direction == MOTOR_DIRECTION_STOP) {
+    if(direction == MOTOR_DIRECTION_BRAKE) {
         WheelTec_SetSpeed(channel, 0);
     } else {
         // 设置速度
@@ -138,7 +130,7 @@ void WheelTec_Control(motor_channel_t channel, motor_direction_t direction, uint
 // 停止指定电机
 void WheelTec_Stop(motor_channel_t channel)
 {
-    WheelTec_Control(channel, MOTOR_DIRECTION_STOP, 0);
+    WheelTec_Control(channel, MOTOR_DIRECTION_BRAKE, 0);
 }
 
 // 停止所有电机
