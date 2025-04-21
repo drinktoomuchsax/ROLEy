@@ -96,6 +96,7 @@ void UART_BSP_ParseSbusFrame(uint8_t *buf)
     remoter.joy.left_hori = remoter.rc.ch[3]; // 左摇杆水平ch3
 
 	remoter.joy_percent.left_vert = MapRange(remoter.joy.left_vert, REMOTE_CHANNEL_BOTTOM, REMOTE_CHANNEL_TOP, -100, 100); // 左摇杆垂直, -100~100%
+    remoter.throttle = MapRange(remoter.joy.left_vert, REMOTE_CHANNEL_BOTTOM, REMOTE_CHANNEL_TOP, 0, 100); // 油门, 0~100%
 	remoter.joy_percent.left_hori = MapRange(remoter.joy.left_hori, REMOTE_CHANNEL_BOTTOM, REMOTE_CHANNEL_TOP, -100, 100); // 左摇杆水平, -100~100%
 	remoter.joy_percent.right_vert = MapRange(remoter.joy.right_vert, REMOTE_CHANNEL_BOTTOM, REMOTE_CHANNEL_TOP, -100, 100); // 右摇杆垂直, -100~100%
 	remoter.joy_percent.right_hori = MapRange(remoter.joy.right_hori, REMOTE_CHANNEL_BOTTOM, REMOTE_CHANNEL_TOP, -100, 100); // 右摇杆水平, -100~100%

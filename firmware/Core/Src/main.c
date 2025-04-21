@@ -74,7 +74,6 @@ uint32_t dtms;
 remoter_t *tx_12 = NULL;
 
 uint8_t temp_debug = 0;
-  uint32_t count = 0;
 
 /* USER CODE END 0 */
 
@@ -134,31 +133,48 @@ int main(void)
       
       // 应用控制命令
 
-        if (tx_12->online&&tx_12->key.left_shoulder == KEY_DOWN && tx_12->key.right_shoulder == KEY_UP) {
-          // 左摇杆控制左电机
-          temp_debug = 1;
-          if (tx_12->joy_percent.left_vert > 10) {
-              // 前进
-              WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, abs(tx_12->joy_percent.left_vert));
-          } else if (tx_12->joy_percent.left_vert < -10) {
-              // 后退
-              WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CCW, abs(tx_12->joy_percent.left_vert));
-          } else {
-              // 停止
-              WheelTec_Stop(MOTOR_CHANNEL_1);
-          }
+      if (tx_12->online&&tx_12->key.left_shoulder == KEY_MID && tx_12->key.right_shoulder == KEY_MID) {
+        if (tx_12->key.left_face == KEY_DOWN && tx_12->key.right_face == KEY_UP) {
+            // 左摇杆控制左电机
+            temp_debug = 1;
+            if (tx_12->joy_percent.left_vert > 10) {
+                // 前进
+                WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, abs(tx_12->joy_percent.left_vert));
+            } else if (tx_12->joy_percent.left_vert < -10) {
+                // 后退
+                WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CCW, abs(tx_12->joy_percent.left_vert));
+            } else {
+                // 停止
+                WheelTec_Stop(MOTOR_CHANNEL_1);
+            }
+            
+            // 右摇杆控制右电机
+            if (tx_12->joy_percent.right_vert > 10) {
+                // 前进
+                WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CW, abs(tx_12->joy_percent.right_vert));
+            } else if (tx_12->joy_percent.right_vert < -10) {
+                // 后退
+                WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CCW, abs(tx_12->joy_percent.right_vert));
+            } else {
+                // 停止
+                WheelTec_Stop(MOTOR_CHANNEL_2);
+            }
+        }else if (tx_12->key.left_face == KEY_DOWN && tx_12->key.right_face == KEY_DOWN) {
+          // 运动学控制，两轮差速，left_vert控制前进的油门（-100为0油门，100为100油门，没有后退）,，right_hori控制转向
+          uint8_t throttle = tx_12->throttle;
+          int8_t steering = tx_12->joy_percent.right_hori;
+          // 计算左右轮的转速
+          int16_t left_speed = throttle + steering;
+          int16_t right_speed = throttle - steering;
+          // 限制转速在0到100之间
+          if (left_speed < 0) left_speed = 0;
+          if (left_speed > 100) left_speed = 100;
+          if (right_speed < 0) right_speed = 0;
+          if (right_speed > 100) right_speed = 100;
+          WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, left_speed);
+          WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CW, right_speed);
           
-          // 右摇杆控制右电机
-          if (tx_12->joy_percent.right_vert > 10) {
-              // 前进
-              WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CW, abs(tx_12->joy_percent.right_vert));
-          } else if (tx_12->joy_percent.right_vert < -10) {
-              // 后退
-              WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CCW, abs(tx_12->joy_percent.right_vert));
-          } else {
-              // 停止
-              WheelTec_Stop(MOTOR_CHANNEL_2);
-          }
+        }
       } else {
           // 遥控器离线，停止所有电机
           temp_debug = 0;

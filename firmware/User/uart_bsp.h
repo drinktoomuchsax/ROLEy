@@ -85,6 +85,7 @@ typedef struct
     } key;
 
     uint16_t rssi; // rssi
+    uint8_t throttle; // 油门
 } remoter_t;
 
 /* 对外接口函数 */
