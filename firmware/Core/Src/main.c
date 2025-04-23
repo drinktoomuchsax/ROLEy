@@ -67,6 +67,7 @@ uint32_t last_update_time = 0;  // 上次更新时间
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 uint32_t dtms;
+void WheelTec_DifferentialDrive(uint8_t throttle, int8_t steering, bool reverse, uint8_t how_expert_are_u);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -134,7 +135,7 @@ int main(void)
       // 应用控制命令
 
       if (tx_12->online&&tx_12->key.left_shoulder == KEY_DOWN && tx_12->key.right_shoulder == KEY_DOWN) {
-        if (tx_12->key.left_face == KEY_DOWN && tx_12->key.right_face == KEY_UP) {
+        if (tx_12->key.left_face == KEY_MID && tx_12->key.right_face == KEY_MID) {
             // 左摇杆控制左电机
             temp_debug = 1;
             if (tx_12->joy_percent.left_vert > 10) {
@@ -161,20 +162,18 @@ int main(void)
             }
         }else if (tx_12->key.left_face == KEY_DOWN && tx_12->key.right_face == KEY_DOWN) {
           // 运动学控制，两轮差速，left_vert控制前进的油门（-100为0油门，100为100油门，没有后退）,，right_hori控制转向
-          uint8_t throttle = tx_12->throttle;
-          int8_t steering = tx_12->joy_percent.right_hori;
-          // 计算左右轮的转速
-          int16_t left_speed = throttle*(1 + steering/100);
-          int16_t right_speed = throttle*(1 - steering/100);
-          // 限制转速在0到100之间
-          if (left_speed < 0) left_speed = 0;
-          if (left_speed > 100) left_speed = 100;
-          if (right_speed < 0) right_speed = 0;
-          if (right_speed > 100) right_speed = 100;
-          WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, left_speed);
-          WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CW, right_speed);
-          
-        }else{
+          WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.right_hori, false, 30);
+        }else if (tx_12->key.left_face == KEY_DOWN && tx_12->key.right_face == KEY_UP) {
+          // 倒挡
+          WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.right_hori, true, 30);
+        }else if (tx_12->key.left_face == KEY_UP && tx_12->key.right_face == KEY_DOWN) {
+          // 前进
+          WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.right_hori, false, 100);
+        }else if (tx_12->key.left_face == KEY_UP && tx_12->key.right_face == KEY_UP) {
+          // 倒挡
+          WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.right_hori, true, 100);
+        }
+        else{
           // 停止所有电机
           WheelTec_StopAll();
         }
@@ -253,6 +252,59 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+/**
+  * @brief  差速驱动控制函数
+  * @param  throttle: 油门值 (0-100)
+  * @param  steering: 转向值 (-100~100)
+  * @param  reverse: 是否倒车模式
+  * @param  how_expert_are_u: 油门百分比 (0-100)
+  * @retval None
+  */
+void WheelTec_DifferentialDrive(uint8_t throttle, int8_t steering, bool reverse, uint8_t how_expert_are_u)
+{
+  // 计算左右轮的转速
+  uint8_t left_speed = 0;
+  uint8_t right_speed = 0;
+  
+  // 映射油门值
+  throttle = throttle * how_expert_are_u / 100;
+  steering = steering * how_expert_are_u / 100;
+
+
+  if(throttle > 1){
+    // 限制转速在0到100之间
+    left_speed = (uint8_t)(throttle*(1 + (float)steering/100));
+    right_speed = (uint8_t)(throttle*(1 - (float)steering/100));
+    if (left_speed < 0) left_speed = 0;
+    if (left_speed > 100) left_speed = 100;
+    if (right_speed < 0) right_speed = 0;
+    if (right_speed > 100) right_speed = 100;
+    
+    if (reverse) {
+      WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CCW, left_speed);
+      WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CCW, right_speed);
+    } else {
+      WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, left_speed);
+      WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CW, right_speed);
+    }
+  } else {
+    // 如果油门为0，则只控制转向
+    if(steering > 0){
+      left_speed = steering/2;
+      right_speed = steering/2;
+      WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, left_speed);
+      WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CCW, right_speed);
+    } else if (steering < 0){
+      left_speed = -steering/2;
+      right_speed = -steering/2;
+      WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CCW, left_speed);
+      WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CW, right_speed);
+    } else {
+      WheelTec_Stop(MOTOR_CHANNEL_1);
+      WheelTec_Stop(MOTOR_CHANNEL_2);
+    }
+  }
+}
 /* USER CODE END 4 */
 
 /**
