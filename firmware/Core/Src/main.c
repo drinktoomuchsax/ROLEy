@@ -267,8 +267,13 @@ void WheelTec_DifferentialDrive(uint8_t throttle, int8_t steering, bool reverse,
   uint8_t right_speed = 0;
   
   // 映射油门值
-  throttle = throttle * how_expert_are_u / 100;
-  steering = steering * how_expert_are_u / 100;
+  if(how_expert_are_u > 100) how_expert_are_u = 100;
+
+  if(how_expert_are_u < 100){
+    throttle = throttle * how_expert_are_u / 100;
+    steering = steering * how_expert_are_u / 100;
+    steering = steering * 2;
+  }
 
 
   if(throttle > 1){
