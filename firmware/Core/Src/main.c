@@ -257,7 +257,7 @@ void SystemClock_Config(void)
   * @param  throttle: 油门值 (0-100)
   * @param  steering: 转向值 (-100~100)
   * @param  reverse: 是否倒车模式
-  * @param  how_expert_are_u: 油门百分比 (0-100)
+  * @param  how_expert_are_u: 你有多专业 (0-100)，越专业速度越快
   * @retval None
   */
 void WheelTec_DifferentialDrive(uint8_t throttle, int8_t steering, bool reverse, uint8_t how_expert_are_u)
