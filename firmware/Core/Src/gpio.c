@@ -61,14 +61,14 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(MOTOR_IN_A1_GPIO_Port, MOTOR_IN_A1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PAPin PA2 */
-  GPIO_InitStruct.Pin = ENCODER_A1_Pin|GPIO_PIN_2;
+  /*Configure GPIO pins : PAPin PAPin */
+  GPIO_InitStruct.Pin = ENCODER_A1_Pin|ENCODER_B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PE9 PEPin */
-  GPIO_InitStruct.Pin = GPIO_PIN_9|ENCODER_A2_Pin;
+  /*Configure GPIO pins : PEPin PEPin */
+  GPIO_InitStruct.Pin = ENCODER_B2_Pin|ENCODER_A2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);

@@ -22,6 +22,7 @@
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
+#include "gmr_encoder.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -61,6 +62,12 @@ void set_grabber(bool active);
 
 /* USER CODE BEGIN PV */
 uint32_t last_update_time = 0;  // 上次更新时间
+float encoder1_position = 0;
+float encoder2_position = 0;
+float encoder1_speed = 0;
+float encoder2_speed = 0;
+int32_t encoder1_count = 0;
+int32_t encoder2_count = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -114,6 +121,7 @@ int main(void)
   // 初始化UART BSP模块（替代直接调用HAL_UARTEx_ReceiveToIdle_DMA）
   UART_BSP_Init();
   WheelTec_Init();
+  gmr_encoder_init();
   
   // 初始化机器人控制结构体
   tx_12 = UART_BSP_GetRemoterData();
@@ -184,6 +192,13 @@ int main(void)
       }
     }
 
+    // 读取编码器数据
+    encoder1_position = gmr_encoder_get_position(ENCODER_1);
+    encoder2_position = gmr_encoder_get_position(ENCODER_2);
+    encoder1_speed = gmr_encoder_get_speed(ENCODER_1);
+    encoder2_speed = gmr_encoder_get_speed(ENCODER_2);
+    encoder1_count = gmr_encoder_get_count(ENCODER_1);
+    encoder2_count = gmr_encoder_get_count(ENCODER_2);
     
     /* USER CODE END WHILE */
 
