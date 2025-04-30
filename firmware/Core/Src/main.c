@@ -22,7 +22,6 @@
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
-#include "gmr_encoder.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -30,6 +29,7 @@
 #include <stdbool.h>
 #include <stdlib.h>  // 为abs函数添加头文件
 #include "wheeltec_driver.h"
+#include "gmr_encoder.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -68,6 +68,11 @@ float encoder1_speed = 0;
 float encoder2_speed = 0;
 int32_t encoder1_count = 0;
 int32_t encoder2_count = 0;
+
+GPIO_PinState encoder1_a_phase = 9;
+GPIO_PinState encoder1_b_phase = 9;
+GPIO_PinState encoder2_a_phase = 9;
+GPIO_PinState encoder2_b_phase = 9;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -132,7 +137,6 @@ int main(void)
   while (1)
   {
     dtms ++;
-
     // 每10ms更新一次机器人控制
     if (HAL_GetTick() - last_update_time >= 10)
     {
@@ -188,7 +192,8 @@ int main(void)
       } else {
           // 遥控器离线，停止所有电机
           temp_debug = 0;
-          WheelTec_StopAll();
+          // WheelTec_StopAll();
+          WheelTec_DifferentialDrive(20, 0, false, 100);
       }
     }
 
@@ -199,7 +204,6 @@ int main(void)
     encoder2_speed = gmr_encoder_get_speed(ENCODER_2);
     encoder1_count = gmr_encoder_get_count(ENCODER_1);
     encoder2_count = gmr_encoder_get_count(ENCODER_2);
-    
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
