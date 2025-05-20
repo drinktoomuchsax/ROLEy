@@ -79,7 +79,8 @@ static void update_encoder_state(gmr_encoder_t* encoder, GPIO_TypeDef* port_a, u
     
     /* 直接取余之后换算成角度 */
     uint32_t one_lap_count = 2 * gmr_encoder_cpr;
-    encoder->position = ((float)(encoder->count % one_lap_count) / one_lap_count) * 360.0f;
+    // encoder->position = ((float)(encoder->count % one_lap_count) / one_lap_count) * 360.0f;
+    encoder->position = ((float)(encoder->count) / one_lap_count) * 360.0f;
     /* 保存当前状态 */
     encoder->last_state = current_state;
 }
