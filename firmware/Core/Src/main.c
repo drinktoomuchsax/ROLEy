@@ -69,10 +69,6 @@ float encoder2_speed = 0;
 int32_t encoder1_count = 0;
 int32_t encoder2_count = 0;
 
-GPIO_PinState encoder1_a_phase = 9;
-GPIO_PinState encoder1_b_phase = 9;
-GPIO_PinState encoder2_a_phase = 9;
-GPIO_PinState encoder2_b_phase = 9;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -189,11 +185,15 @@ int main(void)
           // 停止所有电机
           WheelTec_StopAll();
         }
-      } else {
+      }
+      else if(tx_12->online&&tx_12->key.left_shoulder == KEY_UP && tx_12->key.right_shoulder == KEY_UP)
+      {
+        gmr_encoder_init();
+      }else {
           // 遥控器离线，停止所有电机
           temp_debug = 0;
-          // WheelTec_StopAll();
-          WheelTec_DifferentialDrive(20, 0, false, 100);
+          WheelTec_StopAll();
+          // WheelTec_DifferentialDrive(20, 0, false, 100);
       }
     }
 

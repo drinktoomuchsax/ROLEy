@@ -9,11 +9,50 @@
 /* private macros ------------------------------------------------------------*/
 
 /* private variables ---------------------------------------------------------*/
-static gmr_encoder_t encoders[2] = {0};
+gmr_encoder_t encoders[2] = {0};
 
 /* private function prototypes -----------------------------------------------*/
 
 /* private constants ---------------------------------------------------------*/
+/**
+ * 正转
+ * 00 0
+ * 01 1
+ * 11 3
+ * 10 2
+ * 00 0
+ * 01 1
+ * 11 3
+ * 10 2
+ * 00 0
+ * 
+ * 
+ * 反过来
+ * 00 0
+ * 10 2
+ * 11 3
+ * 01 1
+ * 00 0
+ * 10 2
+ * 11 3
+ * 01 1
+ * 00 0
+ */
+
+/**
+ * 正转
+ * 0111 7
+ * 1110 14
+ * 1000 8
+ * 0001 1
+ * 
+ * 反转
+ * 0010 2
+ * 1011 11
+ * 1101 13
+ * 0100 4
+ */
+// 最后得到状态转移矩阵
 static const int8_t state_table[16] = {
     0,  1, -1,  0,
    -1,  0,  0,  1,
@@ -38,21 +77,9 @@ static void update_encoder_state(gmr_encoder_t* encoder, GPIO_TypeDef* port_a, u
     /* 更新计数值 */
     encoder->count += state_table[state_change];
     
-    /* 处理溢出 */
-    if (encoder->count >= gmr_encoder_cpr)
-    {
-        encoder->count -= gmr_encoder_cpr;
-        encoder->overflow++;
-    }
-    else if (encoder->count < 0)
-    {
-        encoder->count += gmr_encoder_cpr;
-        encoder->overflow--;
-    }
-    
-    /* 更新位置和速度 */
-    encoder->position = (float)encoder->count * 360.0f / gmr_encoder_cpr;
-    
+    /* 直接取余之后换算成角度 */
+    uint32_t one_lap_count = 2 * gmr_encoder_cpr;
+    encoder->position = ((float)(encoder->count % one_lap_count) / one_lap_count) * 360.0f;
     /* 保存当前状态 */
     encoder->last_state = current_state;
 }
