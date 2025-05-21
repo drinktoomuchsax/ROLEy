@@ -30,6 +30,7 @@
 #include <stdlib.h>  // 为abs函数添加头文件
 #include "wheeltec_driver.h"
 #include "gmr_encoder.h"
+# define PI           3.14159265358979323846  /* pi */
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -66,8 +67,13 @@ float encoder1_position = 0;
 float encoder2_position = 0;
 float encoder1_speed = 0;
 float encoder2_speed = 0;
+float encoder1_speed_mps = 0;
+float encoder2_speed_mps = 0;
 int32_t encoder1_count = 0;
 int32_t encoder2_count = 0;
+float encoder1_last_position = 0;
+float encoder2_last_position = 0;
+uint8_t throttle = 0;
 
 /* USER CODE END PV */
 
@@ -195,15 +201,38 @@ int main(void)
           WheelTec_StopAll();
           // WheelTec_DifferentialDrive(20, 0, false, 100);
       }
-    }
 
-    // 读取编码器数据
-    encoder1_position = gmr_encoder_get_position(ENCODER_1);
-    encoder2_position = gmr_encoder_get_position(ENCODER_2);
-    encoder1_speed = gmr_encoder_get_speed(ENCODER_1);
-    encoder2_speed = gmr_encoder_get_speed(ENCODER_2);
-    encoder1_count = gmr_encoder_get_count(ENCODER_1);
-    encoder2_count = gmr_encoder_get_count(ENCODER_2);
+      if (tx_12->online&&tx_12->key.left_shoulder == KEY_UP && tx_12->key.right_shoulder == KEY_DOWN) {
+        throttle = 0;
+      }else if (tx_12->online&&tx_12->key.left_shoulder == KEY_DOWN && tx_12->key.right_shoulder == KEY_DOWN) {
+        throttle = tx_12->throttle;
+      }else {
+        throttle = -1;
+      }
+      encoder1_last_position = encoder1_position;
+      encoder2_last_position = encoder2_position;
+
+      encoder1_position = gmr_encoder_get_position(ENCODER_1);
+      encoder2_position = gmr_encoder_get_position(ENCODER_2);
+
+      // 计算两个轮子的速度
+      encoder1_speed = (encoder1_position - encoder1_last_position) / 0.01f;  // 度/秒
+      encoder2_speed = (encoder2_position - encoder2_last_position) / 0.01f;
+      
+      
+      // 换算成米每秒
+      float wheel_diameter = 8*0.0254f; // 轮子直径,inch to meter
+      float wheel_circumference = wheel_diameter * PI; // 轮子周长
+      // 周长 = 直径*pi
+      // 直线速度 = 轮子转速 * 周长
+      // 轮子转速: 每秒转几圈
+      // encoder1_speed：度每秒
+      float angular_speed1 = encoder1_speed * (PI / 180.0f);  // 弧度/秒
+      float angular_speed2 = encoder2_speed * (PI / 180.0f);  // 弧度/秒
+      encoder1_speed_mps = angular_speed1 * wheel_circumference;
+      encoder2_speed_mps = angular_speed2 * wheel_circumference;
+
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
