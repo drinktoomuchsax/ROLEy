@@ -176,15 +176,16 @@ int main(void)
             }
         }else if (tx_12->key.left_face == KEY_DOWN && tx_12->key.right_face == KEY_DOWN) {
           // 运动学控制，两轮差速，left_vert控制前进的油门（-100为0油门，100为100油门，没有后退）,，right_hori控制转向
-          WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.right_hori, false, 30);
+          // baby速度前进
+          WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.left_hori, false, 30);
         }else if (tx_12->key.left_face == KEY_DOWN && tx_12->key.right_face == KEY_UP) {
-          // 倒挡
-          WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.right_hori, true, 30);
+          // baby速度倒挡
+          WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.left_hori, true, 30);
         }else if (tx_12->key.left_face == KEY_UP && tx_12->key.right_face == KEY_DOWN) {
-          // 前进
+          // 全速前进
           WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.right_hori, false, 100);
         }else if (tx_12->key.left_face == KEY_UP && tx_12->key.right_face == KEY_UP) {
-          // 倒挡
+          // 全速倒挡
           WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.right_hori, true, 100);
         }
         else{
