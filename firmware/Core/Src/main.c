@@ -207,7 +207,7 @@ int main(void)
       }else if (tx_12->online&&tx_12->key.left_shoulder == KEY_DOWN && tx_12->key.right_shoulder == KEY_DOWN) {
         throttle = tx_12->throttle;
       }else {
-        throttle = -1;
+        throttle = 0;
       }
       encoder1_last_position = encoder1_position;
       encoder2_last_position = encoder2_position;
