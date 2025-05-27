@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "dma.h"
+#include "fdcan.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -124,6 +125,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_UART5_Init();
   MX_TIM4_Init();
+  MX_FDCAN1_Init();
   /* USER CODE BEGIN 2 */
   // 初始化UART BSP模块（替代直接调用HAL_UARTEx_ReceiveToIdle_DMA）
   UART_BSP_Init();
@@ -271,7 +273,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLM = 4;
   RCC_OscInitStruct.PLL.PLLN = 30;
   RCC_OscInitStruct.PLL.PLLP = 1;
-  RCC_OscInitStruct.PLL.PLLQ = 2;
+  RCC_OscInitStruct.PLL.PLLQ = 6;
   RCC_OscInitStruct.PLL.PLLR = 2;
   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_3;
   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
