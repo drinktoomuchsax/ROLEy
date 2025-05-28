@@ -31,28 +31,17 @@
 #include <stdlib.h>  // 为abs函数添加头文件
 #include "wheeltec_driver.h"
 #include "gmr_encoder.h"
-# define PI           3.14159265358979323846  /* pi */
+#include "bsp_fdcan.h"
+#include "dm_motor_ctrl.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-// 定义电机控制结构体，作为示例
-typedef struct {
-    float left_motor_speed;
-    float right_motor_speed;
-    bool lights_on;
-    bool grabber_active;
-} robot_control_t;
-
-// 声明实际电机控制函数（这里只是示意）
-void set_motor_speeds(float left, float right);
-void set_lights(bool on);
-void set_grabber(bool active);
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+# define PI           3.14159265358979323846  /* pi */
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -90,6 +79,7 @@ void WheelTec_DifferentialDrive(uint8_t throttle, int8_t steering, bool reverse,
 remoter_t *tx_12 = NULL;
 
 uint8_t temp_debug = 0;
+uint8_t tx_data[8] = {6,6,6,6,6,6,6,6};
 
 /* USER CODE END 0 */
 
@@ -127,23 +117,55 @@ int main(void)
   MX_TIM4_Init();
   MX_FDCAN1_Init();
   /* USER CODE BEGIN 2 */
-  // 初始化UART BSP模块（替代直接调用HAL_UARTEx_ReceiveToIdle_DMA）
-  UART_BSP_Init();
-  WheelTec_Init();
+  UART_BSP_Init(); // SBUS初始化
+  WheelTec_Init(); // GPIO和pwm初始化
   gmr_encoder_init();
+	bsp_can_init();
+  dm_motor_init();
+
+  uint8_t zero_data[8] = {0,0,0,0,0,0,0,0};
+  fdcanx_send_data(&hfdcan1, 0x666, zero_data, 8);
+
+  HAL_Delay(10);
+  /* 往电机的寄存器里面写入位置速度模式 */
+  write_motor_data(motor[Motor1].id, 10, pos_mode, 0, 0, 0);    // 修改电机为位置速度模式
+  HAL_Delay(1000);
+  save_motor_data(motor[Motor1].id, 10);        // 保存电机参数
+  HAL_Delay(1000);
+  dm_motor_enable(&hfdcan1, &motor[Motor1]);    // 使能电机
+  HAL_Delay(1000);
+
+  write_motor_data(motor[Motor2].id, 10, pos_mode, 0, 0, 0);    // 修改电机为位置速度模式
+  HAL_Delay(1000);
+  save_motor_data(motor[Motor2].id, 10);        // 保存电机参数
+  HAL_Delay(1000);
+  dm_motor_enable(&hfdcan1, &motor[Motor2]);    // 使能电机
+  HAL_Delay(1000);
+
   
   // 初始化机器人控制结构体
   tx_12 = UART_BSP_GetRemoterData();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    dtms ++;
     // 每10ms更新一次机器人控制
     if (HAL_GetTick() - last_update_time >= 10)
     {
+      
+      dtms ++;
+      if(dtms % 100 == 0){
+        fdcanx_send_data(&hfdcan1, 0x666, tx_data, 8);
+      }
+      motor[Motor1].ctrl.pos_set += 0.05f;
+      dm_motor_ctrl_send(&hfdcan1, &motor[Motor1]);
+      HAL_Delay(10);
+      motor[Motor2].ctrl.pos_set += 0.05f;
+      dm_motor_ctrl_send(&hfdcan1, &motor[Motor2]);
+      HAL_Delay(10);
       last_update_time = HAL_GetTick();
       
       // 从遥控器更新机器人控制数
