@@ -742,6 +742,21 @@
               <FileType>5</FileType>
               <FilePath>..\User\gmr_encoder.h</FilePath>
             </File>
+            <File>
+              <FileName>bsp_fdcan.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp_fdcan.c</FilePath>
+            </File>
+            <File>
+              <FileName>dm_motor_ctrl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\dm_motor_ctrl.c</FilePath>
+            </File>
+            <File>
+              <FileName>dm_motor_drv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\dm_motor_drv.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
