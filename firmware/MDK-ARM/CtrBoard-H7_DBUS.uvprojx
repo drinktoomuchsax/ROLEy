@@ -757,6 +757,11 @@
               <FileType>1</FileType>
               <FilePath>..\User\dm_motor_drv.c</FilePath>
             </File>
+            <File>
+              <FileName>roley_neck.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\roley_neck.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

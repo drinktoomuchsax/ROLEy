@@ -31,7 +31,7 @@ void dm_motor_init(void)
     motor[Motor1].tmp.read_flag = 1;
     motor[Motor1].ctrl.mode     = pos_mode;    // 选择位置速度模式
     motor[Motor1].ctrl.vel_set  = 4.0f;        // 设置速度为 1
-    motor[Motor1].ctrl.pos_set  = 3.14f;       // 设置位置为 3.14
+    motor[Motor1].ctrl.pos_set  = 0.0f;       // 设置位置为 0，正视前方
     motor[Motor1].ctrl.tor_set  = 0.0f;
     motor[Motor1].ctrl.cur_set  = 0.0f;
     motor[Motor1].ctrl.kp_set   = 0.0f;
@@ -47,7 +47,7 @@ void dm_motor_init(void)
     motor[Motor2].tmp.read_flag = 1;
     motor[Motor2].ctrl.mode     = pos_mode;    // 选择位置速度模式
     motor[Motor2].ctrl.vel_set  = 4.0f;        // 设置速度为 1
-    motor[Motor2].ctrl.pos_set  = 3.14f;       // 设置位置为 3.14
+    motor[Motor2].ctrl.pos_set  = 0.0f;       // 设置位置为 0，正视前方
     motor[Motor2].ctrl.tor_set  = 0.0f;
     motor[Motor2].ctrl.cur_set  = 0.0f;
     motor[Motor2].ctrl.kp_set   = 0.0f;

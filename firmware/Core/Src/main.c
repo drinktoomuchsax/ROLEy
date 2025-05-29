@@ -33,6 +33,7 @@
 #include "gmr_encoder.h"
 #include "bsp_fdcan.h"
 #include "dm_motor_ctrl.h"
+#include "roley_neck.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -81,6 +82,14 @@ remoter_t *tx_12 = NULL;
 uint8_t temp_debug = 0;
 uint8_t tx_data[8] = {6,6,6,6,6,6,6,6};
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim->Instance == TIM2)
+  {
+    neck_motor_update(); // 每1ms更新一次颈部的两个电机
+  }
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -116,31 +125,15 @@ int main(void)
   MX_UART5_Init();
   MX_TIM4_Init();
   MX_FDCAN1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   UART_BSP_Init(); // SBUS初始化
   WheelTec_Init(); // GPIO和pwm初始化
   gmr_encoder_init();
 	bsp_can_init();
   dm_motor_init();
-
-  uint8_t zero_data[8] = {0,0,0,0,0,0,0,0};
-  fdcanx_send_data(&hfdcan1, 0x666, zero_data, 8);
-
-  HAL_Delay(10);
-  /* 往电机的寄存器里面写入位置速度模式 */
-  write_motor_data(motor[Motor1].id, 10, pos_mode, 0, 0, 0);    // 修改电机为位置速度模式
-  HAL_Delay(1000);
-  save_motor_data(motor[Motor1].id, 10);        // 保存电机参数
-  HAL_Delay(1000);
-  dm_motor_enable(&hfdcan1, &motor[Motor1]);    // 使能电机
-  HAL_Delay(1000);
-
-  write_motor_data(motor[Motor2].id, 10, pos_mode, 0, 0, 0);    // 修改电机为位置速度模式
-  HAL_Delay(1000);
-  save_motor_data(motor[Motor2].id, 10);        // 保存电机参数
-  HAL_Delay(1000);
-  dm_motor_enable(&hfdcan1, &motor[Motor2]);    // 使能电机
-  HAL_Delay(1000);
+  neck_motor_init(); // 初始化颈部的两个4310电机
+  HAL_TIM_Base_Start_IT(&htim2); // 开启定时器2的中断，1ms给电机发送一次CAN消息
 
   
   // 初始化机器人控制结构体
@@ -155,76 +148,84 @@ int main(void)
     // 每10ms更新一次机器人控制
     if (HAL_GetTick() - last_update_time >= 10)
     {
-      
-      dtms ++;
+      // 调试用
+      dtms ++; // 程序有没有跑起来
       if(dtms % 100 == 0){
-        fdcanx_send_data(&hfdcan1, 0x666, tx_data, 8);
+        fdcanx_send_data(&hfdcan1, 0x666, tx_data, 8); // 每1s发送一次0x666的CAN消息
       }
-      motor[Motor1].ctrl.pos_set += 0.05f;
-      dm_motor_ctrl_send(&hfdcan1, &motor[Motor1]);
-      HAL_Delay(10);
-      motor[Motor2].ctrl.pos_set += 0.05f;
-      dm_motor_ctrl_send(&hfdcan1, &motor[Motor2]);
-      HAL_Delay(10);
+
+      // motor[Motor1].ctrl.pos_set += 0.05f;
+      // dm_motor_ctrl_send(&hfdcan1, &motor[Motor1]);
+      // HAL_Delay(10);
+      // motor[Motor2].ctrl.pos_set += 0.05f;
+      // dm_motor_ctrl_send(&hfdcan1, &motor[Motor2]);
+      // HAL_Delay(10);
+
       last_update_time = HAL_GetTick();
       
-      // 从遥控器更新机器人控制数
-      
-      // 应用控制命令
-
-      if (tx_12->online&&tx_12->key.left_shoulder == KEY_DOWN && tx_12->key.right_shoulder == KEY_DOWN) {
-        if (tx_12->key.left_face == KEY_MID && tx_12->key.right_face == KEY_MID) {
-            // 左摇杆控制左电机
-            temp_debug = 1;
-            if (tx_12->joy_percent.left_vert > 10) {
-                // 前进
-                WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, abs(tx_12->joy_percent.left_vert));
-            } else if (tx_12->joy_percent.left_vert < -10) {
-                // 后退
-                WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CCW, abs(tx_12->joy_percent.left_vert));
-            } else {
-                // 停止
-                WheelTec_Stop(MOTOR_CHANNEL_1);
-            }
-            
-            // 右摇杆控制右电机
-            if (tx_12->joy_percent.right_vert > 10) {
-                // 前进
-                WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CW, abs(tx_12->joy_percent.right_vert));
-            } else if (tx_12->joy_percent.right_vert < -10) {
-                // 后退
-                WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CCW, abs(tx_12->joy_percent.right_vert));
-            } else {
-                // 停止
-                WheelTec_Stop(MOTOR_CHANNEL_2);
-            }
-        }else if (tx_12->key.left_face == KEY_DOWN && tx_12->key.right_face == KEY_DOWN) {
-          // 运动学控制，两轮差速，left_vert控制前进的油门（-100为0油门，100为100油门，没有后退）,，right_hori控制转向
-          // baby速度前进
-          WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.left_hori, false, 30);
-        }else if (tx_12->key.left_face == KEY_DOWN && tx_12->key.right_face == KEY_UP) {
-          // baby速度倒挡
-          WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.left_hori, true, 30);
-        }else if (tx_12->key.left_face == KEY_UP && tx_12->key.right_face == KEY_DOWN) {
-          // 全速前进
-          WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.right_hori, false, 100);
-        }else if (tx_12->key.left_face == KEY_UP && tx_12->key.right_face == KEY_UP) {
-          // 全速倒挡
-          WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.right_hori, true, 100);
+      // 从遥控器更新机器人控制
+      bool chassis_unlock = tx_12->key.left_shoulder == KEY_DOWN && tx_12->key.right_shoulder == KEY_DOWN;  
+      if (tx_12->online) {
+        // 颈部电机控制
+        float neck_yaw_left_limit = -PI * (75.0f/180.0f); //75度
+        float neck_yaw_right_limit = PI * (75.0f/180.0f); //75度
+        float neck_pitch_lower_limit = -PI * (10.0f/180.0f); //按道理应该10度，这个地方是有一些上下限问题，请忽视这个命名
+        float neck_pitch_upper_limit = PI * (20.0f/180.0f); //按道理20度，同上
+        float yaw_angle = -(tx_12->joy_percent.right_hori/100.0f) * PI/2;
+        float pitch_angle = -(tx_12->joy_percent.right_vert/100.0f) * PI/2;
+        neck_rotate_yaw(yaw_angle, neck_yaw_left_limit, neck_yaw_right_limit);
+        neck_rotate_pitch(pitch_angle, neck_pitch_lower_limit, neck_pitch_upper_limit);
+        // 底盘控制
+        if (chassis_unlock)
+        {
+          if (tx_12->key.left_face == KEY_MID && tx_12->key.right_face == KEY_MID) {
+              // 左摇杆控制左电机
+              temp_debug = 1;
+              if (tx_12->joy_percent.left_vert > 10) {
+                  // 前进
+                  WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, abs(tx_12->joy_percent.left_vert));
+              } else if (tx_12->joy_percent.left_vert < -10) {
+                  // 后退
+                  WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CCW, abs(tx_12->joy_percent.left_vert));
+              } else {
+                  // 停止
+                  WheelTec_Stop(MOTOR_CHANNEL_1);
+              }
+              
+              // 右摇杆控制右电机
+              if (tx_12->joy_percent.right_vert > 10) {
+                  // 前进
+                  WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CW, abs(tx_12->joy_percent.right_vert));
+              } else if (tx_12->joy_percent.right_vert < -10) {
+                  // 后退
+                  WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CCW, abs(tx_12->joy_percent.right_vert));
+              } else {
+                  // 停止
+                  WheelTec_Stop(MOTOR_CHANNEL_2);
+              }
+          }else if (tx_12->key.left_face == KEY_DOWN && tx_12->key.right_face == KEY_DOWN) {
+            // 运动学控制，两轮差速，left_vert控制前进的油门（-100为0油门，100为100油门，没有后退）,，right_hori控制转向
+            // baby速度前进
+            WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.left_hori, false, 30);
+          }else if (tx_12->key.left_face == KEY_DOWN && tx_12->key.right_face == KEY_UP) {
+            // baby速度倒挡
+            WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.left_hori, true, 30);
+          }else if (tx_12->key.left_face == KEY_UP && tx_12->key.right_face == KEY_DOWN) {
+            // 全速前进
+            WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.right_hori, false, 100);
+          }else if (tx_12->key.left_face == KEY_UP && tx_12->key.right_face == KEY_UP) {
+            // 全速倒挡
+            WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.right_hori, true, 100);
+          }
+          else{
+            // 停止所有电机
+            WheelTec_StopAll();
+          }
         }
-        else{
-          // 停止所有电机
-          WheelTec_StopAll();
-        }
-      }
-      else if(tx_12->online&&tx_12->key.left_shoulder == KEY_UP && tx_12->key.right_shoulder == KEY_UP)
-      {
-        gmr_encoder_init();
       }else {
           // 遥控器离线，停止所有电机
           temp_debug = 0;
           WheelTec_StopAll();
-          // WheelTec_DifferentialDrive(20, 0, false, 100);
       }
 
       if (tx_12->online&&tx_12->key.left_shoulder == KEY_UP && tx_12->key.right_shoulder == KEY_DOWN) {
@@ -359,24 +360,24 @@ void WheelTec_DifferentialDrive(uint8_t throttle, int8_t steering, bool reverse,
     if (right_speed > 100) right_speed = 100;
     
     if (reverse) {
-      WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CCW, left_speed);
-      WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CCW, right_speed);
+      WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CW, left_speed);
+      WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, right_speed);
     } else {
-      WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, left_speed);
-      WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CW, right_speed);
+      WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CCW, left_speed);
+      WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CCW, right_speed);
     }
   } else {
     // 如果油门为0，则只控制转向
     if(steering > 0){
       left_speed = steering/2;
       right_speed = steering/2;
-      WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, left_speed);
-      WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CCW, right_speed);
+      WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CCW, left_speed);
+      WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, right_speed);
     } else if (steering < 0){
       left_speed = -steering/2;
       right_speed = -steering/2;
-      WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CCW, left_speed);
-      WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CW, right_speed);
+      WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CW, left_speed);
+      WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CCW, right_speed);
     } else {
       WheelTec_Stop(MOTOR_CHANNEL_1);
       WheelTec_Stop(MOTOR_CHANNEL_2);
