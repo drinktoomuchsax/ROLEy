@@ -20,6 +20,7 @@
 #include "main.h"
 #include "dma.h"
 #include "fdcan.h"
+#include "spi.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -34,6 +35,7 @@
 #include "bsp_fdcan.h"
 #include "dm_motor_ctrl.h"
 #include "roley_neck.h"
+#include "BMI088driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -81,6 +83,7 @@ remoter_t *tx_12 = NULL;
 
 uint8_t temp_debug = 0;
 uint8_t tx_data[8] = {6,6,6,6,6,6,6,6};
+float gyro[3], accel[3], temp;
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
@@ -126,6 +129,7 @@ int main(void)
   MX_TIM4_Init();
   MX_FDCAN1_Init();
   MX_TIM2_Init();
+  MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
   UART_BSP_Init(); // SBUS初始化
   WheelTec_Init(); // GPIO和pwm初始化
@@ -139,6 +143,10 @@ int main(void)
   // 初始化机器人控制结构体
   tx_12 = UART_BSP_GetRemoterData();
 
+  while(BMI088_init())
+  {
+      ;
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -153,6 +161,8 @@ int main(void)
       if(dtms % 100 == 0){
         fdcanx_send_data(&hfdcan1, 0x666, tx_data, 8); // 每1s发送一次0x666的CAN消息
       }
+      
+      BMI088_read(gyro, accel, &temp);
 
       // motor[Motor1].ctrl.pos_set += 0.05f;
       // dm_motor_ctrl_send(&hfdcan1, &motor[Motor1]);

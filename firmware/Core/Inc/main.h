@@ -63,6 +63,10 @@ void Error_Handler(void);
 #define POWER_OUT1_EN_GPIO_Port GPIOC
 #define POWER_EN_5V_Pin GPIO_PIN_15
 #define POWER_EN_5V_GPIO_Port GPIOC
+#define ACC_CS_Pin GPIO_PIN_0
+#define ACC_CS_GPIO_Port GPIOC
+#define GYRO_CS_Pin GPIO_PIN_3
+#define GYRO_CS_GPIO_Port GPIOC
 #define ENCODER_A1_Pin GPIO_PIN_0
 #define ENCODER_A1_GPIO_Port GPIOA
 #define ENCODER_A1_EXTI_IRQn EXTI0_IRQn
@@ -72,6 +76,12 @@ void Error_Handler(void);
 #define ENCODER_B2_Pin GPIO_PIN_9
 #define ENCODER_B2_GPIO_Port GPIOE
 #define ENCODER_B2_EXTI_IRQn EXTI9_5_IRQn
+#define ACC_INT_Pin GPIO_PIN_10
+#define ACC_INT_GPIO_Port GPIOE
+#define ACC_INT_EXTI_IRQn EXTI15_10_IRQn
+#define GYRO_INT_Pin GPIO_PIN_12
+#define GYRO_INT_GPIO_Port GPIOE
+#define GYRO_INT_EXTI_IRQn EXTI15_10_IRQn
 #define ENCODER_A2_Pin GPIO_PIN_13
 #define ENCODER_A2_GPIO_Port GPIOE
 #define ENCODER_A2_EXTI_IRQn EXTI15_10_IRQn
