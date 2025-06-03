@@ -81,7 +81,7 @@
           </BeforeMake>
           <AfterMake>
             <RunUserProg1>0</RunUserProg1>
-            <RunUserProg2>1</RunUserProg2>
+            <RunUserProg2>0</RunUserProg2>
             <UserProg1Name></UserProg1Name>
             <UserProg2Name></UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32H723xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../User;..\Device\BMI088\inc</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc;../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32H7xx/Include;../Drivers/CMSIS/Include;../User;..\Device\BMI088\inc;..\User\PID</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -930,6 +930,11 @@
               <FileType>1</FileType>
               <FilePath>..\User\roley_neck.c</FilePath>
             </File>
+            <File>
+              <FileName>balance_control.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\balance_control.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1018,6 +1023,21 @@
               <FileName>BMI088reg.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\Device\BMI088\inc\BMI088reg.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Algo</GroupName>
+          <Files>
+            <File>
+              <FileName>PID.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\User\PID\PID.h</FilePath>
+            </File>
+            <File>
+              <FileName>PID.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\PID\PID.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -36,10 +36,16 @@
 #include "dm_motor_ctrl.h"
 #include "roley_neck.h"
 #include "BMI088driver.h"
+#include "balance_control.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+typedef enum{
+  CONTROL_STATE_MANUAL = 0,
+  CONTROL_STATE_BALANCE = 1,
+  CONTROL_STATE_LINE_FOLLOWING = 2,
+} control_state_t;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -67,14 +73,21 @@ int32_t encoder2_count = 0;
 float encoder1_last_position = 0;
 float encoder2_last_position = 0;
 uint8_t throttle = 0;
-
+// 平衡控制相关变量
+float pitch_angle = 0.0f;    // 俯仰角
+float pitch_gyro = 0.0f;     // 俯仰角速度
+bool balance_mode = false;   // 平衡模式标志
+control_state_t control_state = CONTROL_STATE_MANUAL; // 控制状态，默认是手动模式，可以切换到平衡小车，线控循迹
+uint32_t dtms; // drinktoomuchsax，用来看程序有没有跑起来
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-uint32_t dtms;
 void WheelTec_DifferentialDrive(uint8_t throttle, int8_t steering, bool reverse, uint8_t how_expert_are_u);
+void update_control_state(void);
+void update_neck_motor(void);
+void manual_control(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -138,8 +151,10 @@ int main(void)
   dm_motor_init();
   neck_motor_init(); // 初始化颈部的两个4310电机
   HAL_TIM_Base_Start_IT(&htim2); // 开启定时器2的中断，1ms给电机发送一次CAN消息
+  balance_init(); // 初始化平衡控制
 
-  
+
+  WheelTec_PIDInit();
   // 初始化机器人控制结构体
   tx_12 = UART_BSP_GetRemoterData();
 
@@ -162,89 +177,13 @@ int main(void)
         fdcanx_send_data(&hfdcan1, 0x666, tx_data, 8); // 每1s发送一次0x666的CAN消息
       }
       
+      // 读取IMU数据
       BMI088_read(gyro, accel, &temp);
-
-      // motor[Motor1].ctrl.pos_set += 0.05f;
-      // dm_motor_ctrl_send(&hfdcan1, &motor[Motor1]);
-      // HAL_Delay(10);
-      // motor[Motor2].ctrl.pos_set += 0.05f;
-      // dm_motor_ctrl_send(&hfdcan1, &motor[Motor2]);
-      // HAL_Delay(10);
-
-      last_update_time = HAL_GetTick();
       
-      // 从遥控器更新机器人控制
-      bool chassis_unlock = tx_12->key.left_shoulder == KEY_DOWN && tx_12->key.right_shoulder == KEY_DOWN;  
-      if (tx_12->online) {
-        // 颈部电机控制
-        float neck_yaw_left_limit = -PI * (75.0f/180.0f); //75度
-        float neck_yaw_right_limit = PI * (75.0f/180.0f); //75度
-        float neck_pitch_lower_limit = -PI * (10.0f/180.0f); //按道理应该10度，这个地方是有一些上下限问题，请忽视这个命名
-        float neck_pitch_upper_limit = PI * (20.0f/180.0f); //按道理20度，同上
-        float yaw_angle = -(tx_12->joy_percent.right_hori/100.0f) * PI/2;
-        float pitch_angle = -(tx_12->joy_percent.right_vert/100.0f) * PI/2;
-        neck_rotate_yaw(yaw_angle, neck_yaw_left_limit, neck_yaw_right_limit);
-        neck_rotate_pitch(pitch_angle, neck_pitch_lower_limit, neck_pitch_upper_limit);
-        // 底盘控制
-        if (chassis_unlock)
-        {
-          if (tx_12->key.left_face == KEY_MID && tx_12->key.right_face == KEY_MID) {
-              // 左摇杆控制左电机
-              temp_debug = 1;
-              if (tx_12->joy_percent.left_vert > 10) {
-                  // 前进
-                  WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, abs(tx_12->joy_percent.left_vert));
-              } else if (tx_12->joy_percent.left_vert < -10) {
-                  // 后退
-                  WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CCW, abs(tx_12->joy_percent.left_vert));
-              } else {
-                  // 停止
-                  WheelTec_Stop(MOTOR_CHANNEL_1);
-              }
-              
-              // 右摇杆控制右电机
-              if (tx_12->joy_percent.right_vert > 10) {
-                  // 前进
-                  WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CW, abs(tx_12->joy_percent.right_vert));
-              } else if (tx_12->joy_percent.right_vert < -10) {
-                  // 后退
-                  WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CCW, abs(tx_12->joy_percent.right_vert));
-              } else {
-                  // 停止
-                  WheelTec_Stop(MOTOR_CHANNEL_2);
-              }
-          }else if (tx_12->key.left_face == KEY_DOWN && tx_12->key.right_face == KEY_DOWN) {
-            // 运动学控制，两轮差速，left_vert控制前进的油门（-100为0油门，100为100油门，没有后退）,，right_hori控制转向
-            // baby速度前进
-            WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.left_hori, false, 30);
-          }else if (tx_12->key.left_face == KEY_DOWN && tx_12->key.right_face == KEY_UP) {
-            // baby速度倒挡
-            WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.left_hori, true, 30);
-          }else if (tx_12->key.left_face == KEY_UP && tx_12->key.right_face == KEY_DOWN) {
-            // 全速前进
-            WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.right_hori, false, 100);
-          }else if (tx_12->key.left_face == KEY_UP && tx_12->key.right_face == KEY_UP) {
-            // 全速倒挡
-            WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.right_hori, true, 100);
-          }
-          else{
-            // 停止所有电机
-            WheelTec_StopAll();
-          }
-        }
-      }else {
-          // 遥控器离线，停止所有电机
-          temp_debug = 0;
-          WheelTec_StopAll();
-      }
+      // 计算俯仰角（使用加速度计数据）
+      pitch_angle = atan2f(accel[2], -accel[1]) * 180.0f / PI; // deg
+      pitch_gyro = gyro[0];  // 使用Y轴陀螺仪数据
 
-      if (tx_12->online&&tx_12->key.left_shoulder == KEY_UP && tx_12->key.right_shoulder == KEY_DOWN) {
-        throttle = 0;
-      }else if (tx_12->online&&tx_12->key.left_shoulder == KEY_DOWN && tx_12->key.right_shoulder == KEY_DOWN) {
-        throttle = tx_12->throttle;
-      }else {
-        throttle = 0;
-      }
       encoder1_last_position = encoder1_position;
       encoder2_last_position = encoder2_position;
 
@@ -255,6 +194,30 @@ int main(void)
       encoder1_speed = (encoder1_position - encoder1_last_position) / 0.01f;  // 度/秒
       encoder2_speed = (encoder2_position - encoder2_last_position) / 0.01f;
       
+      // 模式检查，是否解锁底盘，现在是哪个模式
+      bool chassis_unlock = tx_12->key.left_shoulder == KEY_DOWN;
+      update_control_state();
+
+      update_neck_motor(); // 不管什么模式，都要更新颈部电机
+      if (tx_12->online) {
+        if (chassis_unlock) {
+          if (control_state == CONTROL_STATE_MANUAL) { // 手动模式
+            manual_control();
+          }else if(control_state == CONTROL_STATE_BALANCE){ // 平衡小车模式
+            balance_update(pitch_angle, encoder1_speed+encoder2_speed);
+          }else if(control_state == CONTROL_STATE_LINE_FOLLOWING){ // 线控循迹模式
+            WheelTec_StopAll();
+            // TODO: line_follow_update();
+          }
+        }else{
+          // 底盘解锁，但是没有按下遥控器，停止所有电机
+          WheelTec_StopAll();
+        }
+      } else {
+        // 遥控器离线，停止所有电机
+        temp_debug = 0;
+        WheelTec_StopAll();
+      }
       
       // 换算成米每秒
       float wheel_diameter = 8*0.0254f; // 轮子直径,inch to meter
@@ -268,6 +231,7 @@ int main(void)
       encoder1_speed_mps = angular_speed1 * wheel_circumference;
       encoder2_speed_mps = angular_speed2 * wheel_circumference;
 
+      last_update_time = HAL_GetTick();
     }
     /* USER CODE END WHILE */
 
@@ -392,6 +356,89 @@ void WheelTec_DifferentialDrive(uint8_t throttle, int8_t steering, bool reverse,
       WheelTec_Stop(MOTOR_CHANNEL_1);
       WheelTec_Stop(MOTOR_CHANNEL_2);
     }
+  }
+}
+
+/**
+ * @brief 根据遥控器右肩键更新控制状态，右上为平衡，右中为线控循迹，右下为手动
+ * 
+ */
+void update_control_state(void){
+  if (tx_12->key.right_shoulder == KEY_DOWN)
+  {
+    control_state = CONTROL_STATE_MANUAL;
+  }
+  else if(tx_12->key.right_shoulder == KEY_MID)
+  {
+    control_state = CONTROL_STATE_LINE_FOLLOWING;
+  }else if(tx_12->key.right_shoulder == KEY_UP)
+  {
+    control_state = CONTROL_STATE_BALANCE;
+  }else{
+    control_state = CONTROL_STATE_MANUAL;
+  }
+}
+
+/**
+ * @brief 控制颈部两个4310电机
+ * 
+ */
+void update_neck_motor(void){
+  // 颈部电机控制
+  float neck_yaw_left_limit = -PI * (75.0f/180.0f); //75度
+  float neck_yaw_right_limit = PI * (75.0f/180.0f); //75度
+  float neck_pitch_lower_limit = -PI * (10.0f/180.0f); //按道理应该10度，这个地方是有一些上下限问题，请忽视这个命名
+  float neck_pitch_upper_limit = PI * (20.0f/180.0f); //按道理20度，同上
+  float yaw_angle = -(tx_12->joy_percent.right_hori/100.0f) * PI/2;
+  float pitch_angle = -(tx_12->joy_percent.right_vert/100.0f) * PI/2;
+  neck_rotate_yaw(yaw_angle, neck_yaw_left_limit, neck_yaw_right_limit);
+  neck_rotate_pitch(pitch_angle, neck_pitch_lower_limit, neck_pitch_upper_limit);
+}
+
+/**
+ * @brief 手动控制底盘，有三种模式，完全手动，带运动学控制，全速运动学控制
+ * 
+ */
+void manual_control(void){
+  if (tx_12->key.left_face == KEY_MID && tx_12->key.right_face == KEY_MID) {// 左中右中，左右摇杆各控制左右电机
+    // 左摇杆控制左电机
+    if (tx_12->joy_percent.left_vert > 10) {
+      // 前进
+      WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CW, abs(tx_12->joy_percent.left_vert));
+    } else if (tx_12->joy_percent.left_vert < -10) {
+      // 后退
+      WheelTec_Control(MOTOR_CHANNEL_1, MOTOR_DIRECTION_CCW, abs(tx_12->joy_percent.left_vert));
+    } else {
+      // 停止
+      WheelTec_Stop(MOTOR_CHANNEL_1);
+    }
+    // 右摇杆控制右电机
+    if (tx_12->joy_percent.right_vert > 10) {
+      // 前进
+      WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CW, abs(tx_12->joy_percent.right_vert));
+    } else if (tx_12->joy_percent.right_vert < -10) {
+      // 后退
+      WheelTec_Control(MOTOR_CHANNEL_2, MOTOR_DIRECTION_CCW, abs(tx_12->joy_percent.right_vert));
+    } else {
+      // 停止
+      WheelTec_Stop(MOTOR_CHANNEL_2);
+    }
+  } else if (tx_12->key.left_face == KEY_DOWN && tx_12->key.right_face == KEY_DOWN) {// 左下右下，普通运动学控制
+    // 运动学控制，两轮差速，left_vert控制前进的油门（-100为0油门，100为100油门，没有后退）,，right_hori控制转向
+    // baby速度前进
+    WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.left_hori, false, 30);
+  } else if (tx_12->key.left_face == KEY_DOWN && tx_12->key.right_face == KEY_UP) { // 左下右上，倒挡
+    // baby速度倒挡
+    WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.left_hori, true, 30);
+  } else if (tx_12->key.left_face == KEY_UP && tx_12->key.right_face == KEY_DOWN) { // 左上右下，全速运动学控制
+    // 全速前进
+    WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.right_hori, false, 100);
+  } else if (tx_12->key.left_face == KEY_UP && tx_12->key.right_face == KEY_UP) { // 左上右上，全速倒挡
+    // 全速倒挡
+    WheelTec_DifferentialDrive(tx_12->throttle, tx_12->joy_percent.right_hori, true, 100);
+  } else {
+    // 停止所有电机
+    WheelTec_StopAll();
   }
 }
 /* USER CODE END 4 */
