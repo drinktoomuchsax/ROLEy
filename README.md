@@ -2,18 +2,14 @@
 
 2025 年春天，我们做了 ROLEy：一台用投影和脚踩交互介绍商品的导览机器人原型。
 
-**我（曹正阳）负责全部机械结构、电子硬件和软件实现。**
+我主要负责机械设计、硬件搭建和控制程序。
 
 ## 演示
 
 <table>
   <tr>
-    <th width="50%">底盘移动测试</th>
-    <th width="50%">装好外壳后的演示</th>
-  </tr>
-  <tr>
-    <td><img src="doc/images/roley-driving.gif" alt="装配调试中的 ROLEy 在地面前进、转弯，头部外壳尚未装上" width="100%"></td>
-    <td><img src="doc/images/roley-demo.gif" alt="装好外壳后的 ROLEy 机身与头部转动演示" width="100%"></td>
+    <td width="50%"><img src="doc/images/roley-driving.gif" alt="装配调试中的 ROLEy 在地面前进、转弯，头部外壳尚未装上" width="100%"></td>
+    <td width="50%"><img src="doc/images/roley-demo.gif" alt="装好外壳后的 ROLEy 机身与头部转动演示" width="100%"></td>
   </tr>
 </table>
 
