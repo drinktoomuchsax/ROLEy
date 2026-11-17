@@ -18,12 +18,9 @@
 
 ![ROLEy 的头部与颈部结构](doc/images/roley-head-and-neck.jpg)
 
-<table>
-  <tr>
-    <td width="50%"><img src="doc/images/roley-full-assembly.jpg" alt="ROLEy 整机装配" width="100%"></td>
-    <td width="50%"><img src="doc/images/roley-side-view.jpg" alt="ROLEy 侧面视角" width="100%"></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="doc/images/roley-full-assembly.jpg" alt="ROLEy 机身背面" width="320">
+</p>
 
 ![ROLEy 实物原型](doc/images/roley-prototype-cropped.png)
 
