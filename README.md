@@ -28,12 +28,6 @@
   </tr>
 </table>
 
-## 展板
-
-<p align="center">
-  <a href="doc/images/roley-project-poster.png"><img src="doc/images/roley-project-poster.png" alt="ROLEy 商品导览机器人项目成果展板" width="600"></a>
-</p>
-
 [过程演示](https://www.canva.cn/design/DAGgrH5c16c/yBGa9gnaUXjy1xfGbXzwEA/view) · [原始资料](doc/showcase.md)
 
 ## 机械设计
